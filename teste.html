@@ -8,34 +8,63 @@
         width: 100%;
       }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
     <title>OpenLayers example</title>
   </head>
   <body>
     <h2>My Map</h2>
+    Divisao politica do parana: <input type="checkbox" id="paranaInput"><span class="slider round"></span>
     <div id="map" class="map"></div>
     <script type="text/javascript">
-      var map = new ol.Map({
-        target: 'map',
-        layers: [
-          new ol.layer.Tile({
-            source: new ol.source.OSM()
-          }),
-          new ol.layer.Tile({
-          	title: "parana",
-            source: new ol.source.TileWMS({
-          		url: 'http://localhost:8080/geoserver/teste/wms',
-            	params: {'LAYERS': 'teste:municipios_pr_2015_UTM_SAD69 municipios_pr_2015_UTM_SAD69_Fuso2', 'TILED': true},
-            	serverType: 'geoserver',
-            	// Countries have transparency, so do not fade tiles:
-            	transition: 0
-        	})
-          })		
-        ],
-        view: new ol.View({
-          center: ol.proj.fromLonLat([37.41, 8.82]),
-          zoom: 4
-        })
+
+      $(document).ready(function(){
+      //DEFININDO O MAPA INICIAL
+        var map = new ol.Map({
+          target: 'map',
+          layers: [
+            new ol.layer.Tile({
+              source: new ol.source.OSM()
+            })    
+          ],
+          view: new ol.View({
+            center: ol.proj.fromLonLat([-54.41, -25.82]),
+            zoom: 4
+          })
+        });
+
+        var politico_parana = new ol.layer.Tile({
+          title: "politico_parana",
+          source: new ol.source.TileWMS({
+            url: 'http://localhost:8080/geoserver/teste/wms',
+            params: {'LAYERS': 'teste:municipios_pr_2015_UTM_SAD69 municipios_pr_2015_UTM_SAD69_Fuso2', 'TILED': true},
+            serverType: 'geoserver',
+            // Countries have transparency, so do not fade tiles:
+            transition: 0
+          })
+        });
+
+        //AQUI PRECISA ADICIONAR AS CAMADAS E SETAR COMO FALSE DE INICIO
+        map.addLayer(politico_parana);
+        politico_parana.setVisible(false);
+
+
+
+       //AQUI SAO AS FUNCOES PRA MOSTRAR E ESCONDER AS LAYERS
+       $('#paranaInput').on('change',function(){
+            if($('#paranaInput').is(':checked')){
+                politico_parana.setVisible(true);
+                //municipios.setVisible(false); //AQUI CASO OUTRA LAYER ESTIVER ATIVA PRECISA DESATIVAR
+                //distritos.setVisible(false);
+                //$('#municipioInput').prop("checked", false); //DEPOIS DE DESATIVAR A LAYER TEM QUE TIRAR O CHECKED DO INPUT
+                //$('#distritoInput').prop("checked", false);
+            }else{
+                politico_parana.setVisible(false);
+            }
+        });
+
+
+
       });
     </script>
   </body>
