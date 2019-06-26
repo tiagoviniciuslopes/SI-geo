@@ -10,6 +10,8 @@
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+    <script src="http://dev.openlayers.org/OpenLayers.js"></script>
+    <script src="reqwest.js"></script>
     <title>OpenLayers example</title>
   </head>
   <body>
@@ -48,6 +50,53 @@
         map.addLayer(politico_parana);
         politico_parana.setVisible(false);
 
+        //var popup = new ol.Overlay.Popup();
+        //map.addOverlay(popup);
+        map.on('click', function(evt) { //FUNCAO QUE FAZ O ALERT DAS PROPRIEDADES NO MAPA
+          // Hide existing popup and reset it's offset
+          //popup.hide();
+          //popup.setOffset([0, 0]);
+          // Attempt to find a marker from the planningAppsLayer
+          var feature = map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+              return feature;
+          });
+          if (feature) {
+              var coord = feature.getGeometry().getCoordinates();
+              var props = feature.getProperties();
+              var info = "<h2><a href='" + props.caseurl + "'>" + props.casereference + "</a></h2>";
+                  info += "<p>" + props.locationtext + "</p>";
+                  info += "<p>Status: " + props.status + " " + props.statusdesc + "</p>";
+              // Offset the popup so it points at the middle of the marker not the tip
+              //popup.setOffset([0, -22]);
+              //popup.show(coord, info);
+              alert("Area em 2015: " + props.areakm2015 + " km²");
+          } else {
+              var url = politico_parana //AQUI TEM QUE PASSAR A LAYER DE ONDE VAI PEGA A PROPERTY
+                          .getSource()
+                          .getGetFeatureInfoUrl(
+                              evt.coordinate,
+                              map.getView().getResolution(),
+                              map.getView().getProjection(),
+                              {
+                                  'INFO_FORMAT': 'application/json',
+                                  'propertyName': 'areakm2015' //AQUI TEM QUE PASSAR O NOME DA PROPERTY
+                              }
+                          );
+              reqwest({
+                  url: url,
+                  type: 'json',
+              }).then(function (data) {
+                  var feature = data.features[0];
+                  console.log(feature);
+                  var props = feature.properties;
+                  console.log(props);
+                  var info = "<h2>" + props.NAME + "</h2><p>" + props.DESCRIPTION + "</p>";
+                  //popup.show(evt.coordinate, info);
+                  alert("Area em 2015: " + props.areakm2015 + " km²");
+              });
+
+          }
+});
 
 
        //AQUI SAO AS FUNCOES PRA MOSTRAR E ESCONDER AS LAYERS
