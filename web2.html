@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WMS GetFeatureInfo example (tile layer)</title>
+<script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ol3/3.5.0/ol.css" type="text/css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ol3/3.5.0/ol.js"></script>
+
+</head>
+<body>
+<div class="container-fluid">
+
+<div class="row-fluid">
+  <div class="span12">
+    <div id="map" class="map"></div>
+    <div class="span4 offset4 pull-right">
+      <div id="info" class="alert alert-success">
+        &nbsp;
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+   $(document).ready(function(){
+      //DEFININDO O MAPA INICIAL
+     var view = new ol.View({
+            center: ol.proj.fromLonLat([-54.41, -25.82]),
+            zoom: 4
+          });
+      var map = new ol.Map({
+          target: 'map',
+
+          layers: [
+            new ol.layer.Tile({
+              source: new ol.source.OSM()
+            })    
+          ],
+          view: view
+           
+        });
+var wmsSource = new ol.source.TileWMS({
+  url: 'http://localhost:8080/geoserver/it.geosolutions/wms',
+            params: {'LAYERS': 'it.geosolutions:assaltos', 'TILED': true},
+            serverType: 'geoserver',
+  crossOrigin: ''
+});
+
+var wmsLayer = new ol.layer.Tile({
+   source: new ol.source.TileWMS({
+            url: 'http://localhost:8080/geoserver/it.geosolutions/wms',
+            params: {'LAYERS': 'it.geosolutions:assaltos', 'TILED': true},
+            serverType: 'geoserver',
+            // Countries have transparency, so do not fade tiles:
+            transition: 0
+          })
+});
+
+ map.addLayer(wmsLayer);
+
+map.on('singleclick', function(evt) {
+  document.getElementById('info').innerHTML = '';
+  var viewResolution = /** @type {number} */ (view.getResolution());
+  var url = wmsSource.getGetFeatureInfoUrl(
+      evt.coordinate, viewResolution, 'EPSG:3857',
+      {'INFO_FORMAT': 'text/html'});
+  if (url) {
+    document.getElementById('info').innerHTML =
+        '<iframe seamless src="' + url + '"></iframe>';
+  }
+});
+
+map.on('pointermove', function(evt) {
+  if (evt.dragging) {
+    return;
+  }
+  var pixel = map.getEventPixel(evt.originalEvent);
+  var hit = map.forEachLayerAtPixel(pixel, function(layer) {
+    return true;
+  });
+  map.getTargetElement().style.cursor = hit ? 'pointer' : '';
+});
+
+});
+
+
+
+</script>
+</body>
+</html>
